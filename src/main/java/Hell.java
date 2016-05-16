@@ -29,7 +29,7 @@ public class Hell {
                 System.out.println("DATA");
                 int c;
                 while ((c = zis.read()) != -1) {
-                    System.out.print((char) c);
+h                    System.out.print((char) c);
                 }
                 System.out.println();
             } else*//* if (entryName.endsWith(".zip")) {
@@ -62,14 +62,7 @@ public class Hell {
             ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
             String entryName = entry.getName();
             System.out.println("reading: " + entryName);
-            /*if (entryName.endsWith(".txt")) {
-                System.out.println("DATA");
-                int c;
-                while ((c = zis.read()) != -1) {
-                    System.out.print((char) c);
-                }
-                System.out.println();
-            } else*/ if (entryName.endsWith(".zip")) {
+            if (entryName.endsWith(".zip")) {
                 System.out.println("ZIP: " + entryName);
                 extract(entryName, zip.getInputStream(entry));
             }
