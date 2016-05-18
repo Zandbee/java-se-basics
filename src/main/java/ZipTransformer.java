@@ -1,4 +1,6 @@
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.zip.ZipEntry;
@@ -6,30 +8,25 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Created by vstrokova on 12.05.2016.
+ * Created by vstrokova on 18.05.2016.
  */
-public class Hell {
+public class ZipTransformer {
 
-    public static void main(String args[]) throws Exception {
-        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream("inputs.zip")));
+    private String delimiters = "[ \t,;]+";
+    private String phonesZip = "phones.txt";
+    private String emailsZip = "emails.txt";
+    private ArrayList<String> allEmails; // TODO: rename?
+    private ArrayList<String> allPhones; // TODO: rename?
 
-        FileOutputStream dest = new FileOutputStream("inputsv2.zip");
-        ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
-
-        ZipTransformer zipTransformer = new ZipTransformer();
-        zipTransformer.copyZip(zis, out);
-
-        out.close();
+    public ZipTransformer() {
+        allEmails = new ArrayList<>();
+        allPhones = new ArrayList<>();
     }
 
-    /*private static void copyZip(ZipInputStream zipInputStream, ZipOutputStream out) throws Exception {
+    public void copyZip(ZipInputStream zipInputStream, ZipOutputStream out) throws Exception {
         ZipEntry zipEntry;
         int count, pos;
-        String delimiters = "[ \t,;]+";
-        String phonesZip = "phones.txt";
-        String emailsZip = "emails.txt";
-        ArrayList<String> allEmails = new ArrayList<>(); // is initialization ok? TODO: rename?
-        ArrayList<String> allPhones = new ArrayList<>(); // is initialization ok? TODO: rename?
+
         allPhones = new ArrayList<>();
         while ((zipEntry = zipInputStream.getNextEntry()) != null) {
             String entryName = zipEntry.getName();
@@ -39,16 +36,16 @@ public class Hell {
                 System.out.println("Add zip to zip: " + entryName);
                 ZipInputStream zis = new ZipInputStream(zipInputStream);
                 out.putNextEntry(new ZipEntry(entryName));
-                *//*while ((count = zipInputStream.read()) != -1) {
+                while ((count = zipInputStream.read()) != -1) {
                     System.out.println("Writing zip");
                     out.write(count);
-                }*//*
+                }
 
                 ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
                 ZipOutputStream zos = new ZipOutputStream(out);
                 //byteOutputStream.toByteArray()
 
-                copyZip(zis, zos);
+                //copyZip(zis, out);
 
             } else if (entryName.endsWith(".txt")) {
                 System.out.println("Add txt to zip: " + entryName);
@@ -102,11 +99,11 @@ public class Hell {
                 ZipEntry newZipEntry = new ZipEntry(entryName);
                 out.putNextEntry(newZipEntry);
                 out.write(sb.toString().getBytes("UTF-8"));
-            } *//*else if (zipEntry.isDirectory()) {
+            } /*else if (zipEntry.isDirectory()) {
                 System.out.println("Add dir to zip: " + entryName);
                 System.out.println();
                 out.putNextEntry(new ZipEntry(entryName));
-            }*//*
+            }*/
         }
 
         out.putNextEntry(new ZipEntry(phonesZip));
@@ -116,5 +113,5 @@ public class Hell {
         out.write(Utils.getBytes(allEmails));
 
         System.out.println("COPIED");
-    }*/
+    }
 }
