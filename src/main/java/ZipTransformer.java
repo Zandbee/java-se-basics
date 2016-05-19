@@ -3,6 +3,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -15,19 +16,18 @@ public class ZipTransformer {
     private String delimiters = "[ \t,;]+";
     private String phonesZip = "phones.txt";
     private String emailsZip = "emails.txt";
-    private ArrayList<String> allEmails; // TODO: rename?
-    private ArrayList<String> allPhones; // TODO: rename?
+    private TreeSet<String> allEmails; // TODO: rename?
+    private TreeSet<String> allPhones; // TODO: rename?
 
     public ZipTransformer() {
-        allEmails = new ArrayList<>();
-        allPhones = new ArrayList<>();
+        allEmails = new TreeSet<>();
+        allPhones = new TreeSet<>();
     }
 
     public void copyZip(ZipInputStream zipInputStream, ZipOutputStream out) throws Exception {
         ZipEntry zipEntry;
         int count, pos;
 
-        allPhones = new ArrayList<>();
         while ((zipEntry = zipInputStream.getNextEntry()) != null) {
             String entryName = zipEntry.getName();
             System.out.println(entryName);
