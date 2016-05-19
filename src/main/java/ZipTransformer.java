@@ -11,8 +11,7 @@ import java.util.zip.ZipOutputStream;
 public class ZipTransformer {
 
     private static final String DELIMITERS = "[ \t,;]+";
-    private static final String PHONES_ZIP = "phones.txt";
-    private static final String EMAILS_ZIP = "emails.txt";
+    private static final String NOT_NUMBERS = "[^0-9]";
     private TreeSet<String> allEmails; // TODO: rename?
     private TreeSet<String> allPhones; // TODO: rename?
 
@@ -20,9 +19,9 @@ public class ZipTransformer {
 
     }
 
-    public void copyZip(ZipInputStream zipInputStream, ZipOutputStream out) throws Exception {
-        ZipEntry zipEntry;
-        int count;
+    public byte[] readEntry(ZipInputStream zipInputStream, String entryName) throws Exception {
+        ZipEntry entry;
+        ByteArrayOutputStream data = new ByteArrayOutputStream();
 
         if (allPhones == null) {
             allPhones = new TreeSet<>();
@@ -31,42 +30,32 @@ public class ZipTransformer {
             allEmails = new TreeSet<>();
         }
 
-        while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-            String entryName = zipEntry.getName();
-            System.out.println(entryName);
+            System.out.println("ENTRY IN READER: " + entryName);
 
             if (entryName.endsWith(".zip")) {
-                System.out.println("Add zip to zip: " + entryName);
+                ZipInputStream internalZis = new ZipInputStream(zipInputStream);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                ZipOutputStream internalZos = new ZipOutputStream(baos);
 
-
-                /*while ((count = zipInputStream.read()) != -1) {
-                    System.out.println("Writing zip");
-                    internalOut.write(count);
-                }*/
-
-            } else if (entryName.endsWith(".txt")) {
-                System.out.println("Add txt to zip: " + entryName);
-
-                ZipEntry newZipEntry = new ZipEntry(entryName);
-                out.putNextEntry(newZipEntry);
-                out.write(readTxt(zipInputStream));
+                while ((entry = internalZis.getNextEntry()) != null) {
+                    internalZos.putNextEntry(new ZipEntry(entry.getName()));
+                    internalZos.write(readEntry(internalZis, entry.getName()));
+                }
+                internalZos.close();
+                data.write(baos.toByteArray());
             }
-        }
 
+            if (entryName.endsWith("txt")) {
+                data.write(readTxt(zipInputStream));
+            }
 
-        /*out.putNextEntry(new ZipEntry(PHONES_ZIP));
-        out.write(Utils.getBytes(allPhones));
-
-        out.putNextEntry(new ZipEntry(EMAILS_ZIP));
-        out.write(Utils.getBytes(allEmails));*/
-
-        System.out.println("COPIED");
+        return data.toByteArray();
     }
 
     private byte[] readTxt(ZipInputStream zipInputStream) throws Exception{
         BufferedReader reader = new BufferedReader(new InputStreamReader(zipInputStream));
         StringBuilder sb = new StringBuilder();
-        int pos;
+        int pos, phonePrefixStart, phonePrefixEnd;
 
         String line, phone, phonePrefix, mails; // TODO: rename 'mails'
         String[] emails;
@@ -79,29 +68,33 @@ public class ZipTransformer {
 
                 mails = line.substring(pos);
                 emails = mails.trim().split(DELIMITERS);
-                System.out.println("EMAILS:");
+                /*System.out.println("EMAILS:");
                 for (String email : emails) {
                     System.out.println(email);
-                }
+                }*/
 
-                phonePrefix = phone.substring(phone.indexOf("("), phone.indexOf(")") + 1);
-                System.out.println("PHONE PREFIX: " + phonePrefix);
+                phonePrefixStart = phone.indexOf("(");
+                phonePrefixEnd = phone.indexOf(")");
+                phonePrefix = phone.substring(phonePrefixStart, phonePrefixEnd + 1);
+                //System.out.println("PHONE PREFIX: " + phonePrefix);
                 switch (phonePrefix) { // a. 101 -> 401; b. 202 -> 802; c. 301 -> 321.
                     case "(101)":
                         phone = phone.replace(phonePrefix, "(401)");
-                        System.out.println("PHONE changed: " + phone);
+                        //System.out.println("PHONE changed: " + phone);
                         break;
                     case "(202)":
                         phone = phone.replace(phonePrefix, "(802)");
-                        System.out.println("PHONE changed: " + phone);
+                        //System.out.println("PHONE changed: " + phone);
                         break;
                     case "(301)":
                         phone = phone.replace(phonePrefix, "(321)");
-                        System.out.println("PHONE changed: " + phone);
+                        //System.out.println("PHONE changed: " + phone);
                         break;
                     default:
                         break;
                 }
+                phone = phone.substring(0, phonePrefixEnd + 2)
+                        .concat(phone.substring(phonePrefixEnd + 2).replaceAll(NOT_NUMBERS, ""));
 
                 line = phone.concat(mails);
 
@@ -118,5 +111,13 @@ public class ZipTransformer {
             e.printStackTrace();
         }
         return txtBytes;
+    }
+
+    public TreeSet<String> getAllPhones() {
+        return allPhones;
+    }
+
+    public TreeSet<String> getAllEmails() {
+        return allEmails;
     }
 }
