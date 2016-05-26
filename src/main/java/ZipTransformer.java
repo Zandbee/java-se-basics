@@ -1,5 +1,4 @@
 import java.io.*;
-import java.util.Arrays;
 import java.util.TreeSet;
 import java.util.zip.*;
 
@@ -12,25 +11,19 @@ public class ZipTransformer {
     private static final String PREFIX_401 = "401";
     private static final String PREFIX_802 = "802";
 
-    private static final String DELIMITERS = "[ \t,;]+";
-    private static final String NOT_NUMBERS = "[^0-9]";
     private static final String PHONES_ZIP = "phones.txt";
     private static final String EMAILS_ZIP = "emails.txt";
-    private TreeSet<String> allEmails;
-    private TreeSet<String> allPhones;
 
-    public ZipTransformer() { }
+    private TreeSet<String> allEmails = new TreeSet<>();
+    private TreeSet<String> allPhones = new TreeSet<>();
+    private TreeSet<String> allLines = new TreeSet<>();
+
+    public ZipTransformer() {
+    }
 
     public void copyZip(ZipInputStream in, ZipOutputStream out) throws Exception {
         ZipEntry entry;
         String entryName;
-
-        if (allPhones == null) {
-            allPhones = new TreeSet<>();
-        }
-        if (allEmails == null) {
-            allEmails = new TreeSet<>();
-        }
 
         while ((entry = in.getNextEntry()) != null) {
             entryName = entry.getName();
@@ -56,7 +49,7 @@ public class ZipTransformer {
         String line;
         BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
         while ((line = reader.readLine()) != null) {
-            out.write(readLine(line));
+            readLine(line, out);
         }
     }
 
@@ -79,73 +72,115 @@ public class ZipTransformer {
         String line;
 
         while ((line = reader.readLine()) != null) {
-            internalOut.write(readLine(line));
+            readLine(line, internalOut);
         }
 
         internalOut.finish();
     }
 
-    private byte[] readLine(String line) throws Exception {
-        int phoneEnd, phonePrefixStart, phonePrefixEnd;
-        String phone, phonePrefix, emailString;
-        String[] emails;
-        StringBuilder sb = new StringBuilder();
-
-        System.out.println("LINE: " + line);
-
-        if (line.contains("@")) {
-            phoneEnd = line.lastIndexOf(" ", line.indexOf("@")); // phone num ends here and emails begin
-
-            phone = line.substring(0, phoneEnd); // TODO: trim?
-            System.out.println("PHONE: " + phone);
-
-            emailString = line.substring(phoneEnd);
-            emails = emailString.trim().split(DELIMITERS); // TODO: trim?
-
-            phonePrefixStart = phone.indexOf("(");
-            phonePrefixEnd = phone.indexOf(")");
-            phonePrefix = phone.substring(phonePrefixStart, phonePrefixEnd + 1);
-            switch (phonePrefix) { // a. 101 -> 401; b. 202 -> 802; c. 301 -> 321.
-                case PREFIX_101:
-                    phone = phone.replace(phonePrefix, PREFIX_401); // TODO: extract String const?
-                    break;
-                case PREFIX_202:
-                    phone = phone.replace(phonePrefix, PREFIX_802);
-                    break;
-                case PREFIX_301:
-                    phone = phone.replace(phonePrefix, PREFIX_321);
-                    break;
-                default:
-                    break;
-            }
-            phone = phone.substring(0, phonePrefixEnd + 2)
-                    .concat(phone.substring(phonePrefixEnd + 2).replaceAll(NOT_NUMBERS, "")); // TODO: is it ok?
-
-            line = phone.concat(emailString);
-
+    private void readLine(String line, OutputStream out) throws Exception {
+        String[] splitted = line.split("@", 2);
+        if (splitted.length > 1) {
+            String phoneAndKusochekEmail = splitted[0];
+            PhoneFormatResult phoneFormatResult = extractAndFormatPhone(phoneAndKusochekEmail);
+            String phone = phoneFormatResult.phone;
             allPhones.add(phone);
-            allEmails.addAll(Arrays.asList(emails));
+            out.write(Utils.toBytes(phone));
+
+            String emailString = phoneFormatResult.kusochekEmail + "@" + splitted[1];
+            out.write(Utils.toBytes(" "));
+            out.write(Utils.toBytes(emailString));
+
+            //if (allLines.add(emailString)) System.out.println(emailString);
+
+            addUniqueEmails(emailString);
+        } else {
+            out.write(Utils.toBytes(line));
         }
 
-        sb.append(line).append("\r\n"); // TODO: vvvv
-
-        byte[] txtBytes = new byte[2048];
-        try {
-            txtBytes = sb.toString().getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return txtBytes;
+        out.write(Utils.toBytes("\r\n"));
     }
 
-    public void writePhoneFile(ZipOutputStream out) throws Exception {
+    private void addUniqueEmails(String emailString) {
+        StringBuilder sbEmail = new StringBuilder();
+        for (int i = 0; i < emailString.length(); i++) {
+            char c = emailString.charAt(i);
+            if (c == ' ' || c == '\t' || c == ',' || c == ';') {
+                if (sbEmail.length() > 0) {
+                    allEmails.add(sbEmail.toString());
+                    sbEmail = new StringBuilder();
+                }
+            } else {
+                sbEmail.append(c);
+            }
+        }
+        if (sbEmail.length() > 0) {
+            allEmails.add(sbEmail.toString());
+        }
+    }
+
+    private PhoneFormatResult extractAndFormatPhone(String phoneAndKusochekEmail) {
+        String[] phoneParts = phoneAndKusochekEmail.split(" ");
+
+        StringBuilder sbPhone = new StringBuilder();
+        StringBuilder sbPrefix = new StringBuilder();
+        boolean isPrefix = false;
+        for (int i = 0; i < phoneParts.length - 1; i++) {
+            String phonePart = phoneParts[i];
+            int phonePartLength = phonePart.length();
+            for (int j = 0; j < phonePartLength; j++) {
+                char c = phonePart.charAt(j);
+                if (c == '(') {
+                    isPrefix = true;
+                } else if (c == ')') {
+                    isPrefix = false;
+                    String prefix = sbPrefix.toString();
+                    switch (prefix) { // a. 101 -> 401; b. 202 -> 802; c. 301 -> 321.
+                        case PREFIX_101:
+                            prefix = PREFIX_401;
+                            break;
+                        case PREFIX_202:
+                            prefix = PREFIX_802;
+                            break;
+                        case PREFIX_301:
+                            prefix = PREFIX_321;
+                            break;
+                        default:
+                            break;
+                    }
+                    sbPhone.append(" (").append(prefix).append(") ");
+                } else if (c == '+' ||
+                        c == '0' ||
+                        c == '1' ||
+                        c == '2' ||
+                        c == '3' ||
+                        c == '4' ||
+                        c == '5' ||
+                        c == '6' ||
+                        c == '7' ||
+                        c == '8' ||
+                        c == '9') {
+                    if (isPrefix) {
+                        sbPrefix.append(c);
+                    } else {
+                        sbPhone.append(c);
+                    }
+                }
+
+            }
+        }
+
+        return new PhoneFormatResult(sbPhone.toString(), phoneParts[phoneParts.length - 1]);
+    }
+
+    public void writePhoneFile(ZipOutputStream out) throws IOException {
         out.putNextEntry(new ZipEntry(PHONES_ZIP));
-        out.write(Utils.getBytes(allPhones)); // TODO: if phones == null ?
+        out.write(Utils.toBytes(allPhones));
     }
 
-    public void writeEmailFile(ZipOutputStream out) throws Exception {
+    public void writeEmailFile(ZipOutputStream out) throws IOException {
         out.putNextEntry(new ZipEntry(EMAILS_ZIP));
-        out.write(Utils.getBytes(allEmails)); // TODO: if emails == null ?
+        out.write(Utils.toBytes(allEmails));
     }
 
     private boolean isTxt(String name) {
@@ -159,4 +194,15 @@ public class ZipTransformer {
     private boolean isGz(String name) {
         return name.endsWith(".gz");
     }
+
+    public static final class PhoneFormatResult {
+        private String phone;
+        private String kusochekEmail;
+
+        public PhoneFormatResult(String phone, String kusochekEmail) {
+            this.phone = phone;
+            this.kusochekEmail = kusochekEmail;
+        }
+    }
+
 }
