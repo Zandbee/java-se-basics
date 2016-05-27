@@ -14,6 +14,8 @@ public class ZipTransformer {
     private static final String PHONES_ZIP = "phones.txt";
     private static final String EMAILS_ZIP = "emails.txt";
 
+    private static final String UTF_8 = "UTF-8";
+
     private TreeSet<String> allEmails = new TreeSet<>();
     private TreeSet<String> allPhones = new TreeSet<>();
     private TreeSet<String> allLines = new TreeSet<>();
@@ -21,7 +23,7 @@ public class ZipTransformer {
     public ZipTransformer() {
     }
 
-    public void copyZip(ZipInputStream in, ZipOutputStream out) throws Exception {
+    public void copyZip(ZipInputStream in, ZipOutputStream out) throws IOException{
         ZipEntry entry;
         String entryName;
 
@@ -44,17 +46,15 @@ public class ZipTransformer {
 
     }
 
-    // if txt, read by string and write to out by string
-    private void readTextFile(ZipInputStream in, ZipOutputStream out) throws Exception {
+    private void readTextFile(ZipInputStream in, ZipOutputStream out) throws IOException{
         String line;
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in, UTF_8));
         while ((line = reader.readLine()) != null) {
             readLine(line, out);
         }
     }
 
-    // if zip, copyZip
-    private void readZip(ZipInputStream in, ZipOutputStream out) throws Exception {
+    private void readZip(ZipInputStream in, ZipOutputStream out) throws IOException{
         ZipInputStream internalZip = new ZipInputStream(in);
         ZipOutputStream internalOut = new ZipOutputStream(out);
 
@@ -64,11 +64,10 @@ public class ZipTransformer {
         out.closeEntry();
     }
 
-    // if gz, read by string and write to out by string
-    private void readGzip(ZipInputStream in, ZipOutputStream out) throws Exception {
+    private void readGzip(ZipInputStream in, ZipOutputStream out) throws IOException{
         GZIPInputStream internalGzip = new GZIPInputStream(in);
         GZIPOutputStream internalOut = new GZIPOutputStream(out);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(internalGzip, "UTF-8"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(internalGzip, UTF_8));
         String line;
 
         while ((line = reader.readLine()) != null) {
@@ -78,7 +77,7 @@ public class ZipTransformer {
         internalOut.finish();
     }
 
-    private void readLine(String line, OutputStream out) throws Exception {
+    private void readLine(String line, OutputStream out) throws IOException{
         String[] splitted = line.split("@", 2);
         if (splitted.length > 1) {
             String phoneAndKusochekEmail = splitted[0];
@@ -196,11 +195,11 @@ public class ZipTransformer {
         return name.endsWith(".gz");
     }
 
-    public static final class PhoneFormatResult {
+    private static final class PhoneFormatResult {
         private String phone;
         private String kusochekEmail;
 
-        public PhoneFormatResult(String phone, String kusochekEmail) {
+        PhoneFormatResult(String phone, String kusochekEmail) {
             this.phone = phone;
             this.kusochekEmail = kusochekEmail;
         }

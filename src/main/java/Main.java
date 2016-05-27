@@ -7,7 +7,7 @@ public class Main {
     private static final String IN_ZIP = "inputs.zip";
     private static final String OUT_ZIP = "inputsv2.zip";
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String args[]) throws Exception{
         double start, finish;
 
         start = System.currentTimeMillis();
