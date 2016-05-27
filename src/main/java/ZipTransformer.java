@@ -91,9 +91,10 @@ public class ZipTransformer {
             out.write(Utils.toBytes(" "));
             out.write(Utils.toBytes(emailString));
 
-            //if (allLines.add(emailString)) System.out.println(emailString);
-
-            addUniqueEmails(emailString);
+            if (allLines.add(emailString)) {
+                System.out.println(emailString);
+                addUniqueEmails(emailString);
+            }
         } else {
             out.write(Utils.toBytes(line));
         }
