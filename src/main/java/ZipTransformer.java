@@ -1,4 +1,6 @@
 import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.*;
 
@@ -16,14 +18,26 @@ public class ZipTransformer {
 
     private static final String UTF_8 = "UTF-8";
 
-    private TreeSet<String> allEmails = new TreeSet<>();
-    private TreeSet<String> allPhones = new TreeSet<>();
-    private TreeSet<String> allLines = new TreeSet<>();
+    private Set<String> allEmails = new TreeSet<>();
+    private Set<String> allPhones = new TreeSet<>();
+    private Set<String> allLines = new HashSet<>();
 
-    public ZipTransformer() {
+    private ZipInputStream in;
+    private ZipOutputStream out;
+
+    public ZipTransformer(ZipInputStream zipInputStream, ZipOutputStream outputStream) {
+        in = zipInputStream;
+        out = outputStream;
     }
 
-    public void copyZip(ZipInputStream in, ZipOutputStream out) throws IOException{
+    public void copyZipAndFilterPhonesEmails() throws IOException {
+        copyZip(in, out);
+
+        writeEmailFile();
+        writePhoneFile();
+    }
+
+    private void copyZip(ZipInputStream in, ZipOutputStream out) throws IOException{
         ZipEntry entry;
         String entryName;
 
@@ -43,7 +57,6 @@ public class ZipTransformer {
                 readGzip(in, out);
             }
         }
-
     }
 
     private void readTextFile(ZipInputStream in, ZipOutputStream out) throws IOException{
@@ -173,14 +186,24 @@ public class ZipTransformer {
         return new PhoneFormatResult(sbPhone.toString(), phoneParts[phoneParts.length - 1]);
     }
 
-    public void writePhoneFile(ZipOutputStream out) throws IOException {
+    private void writePhoneFile() throws IOException {
         out.putNextEntry(new ZipEntry(PHONES_ZIP));
-        out.write(Utils.toBytes(allPhones));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+        for (String phoneLine : allPhones){
+            bw.write(phoneLine);
+            bw.newLine();
+        }
+        bw.flush();
     }
 
-    public void writeEmailFile(ZipOutputStream out) throws IOException {
+    private void writeEmailFile() throws IOException {
         out.putNextEntry(new ZipEntry(EMAILS_ZIP));
-        out.write(Utils.toBytes(allEmails));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+        for (String emailLine : allEmails) {
+            bw.write(emailLine);
+            bw.newLine();
+        }
+        bw.flush();
     }
 
     private boolean isTxt(String name) {
@@ -195,7 +218,7 @@ public class ZipTransformer {
         return name.endsWith(".gz");
     }
 
-    private class PhoneFormatResult {
+    private static class PhoneFormatResult {
         private String phone;
         private String kusochekEmail;
 
@@ -204,5 +227,4 @@ public class ZipTransformer {
             this.kusochekEmail = kusochekEmail;
         }
     }
-
 }

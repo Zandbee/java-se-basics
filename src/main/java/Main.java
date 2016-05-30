@@ -15,12 +15,9 @@ public class Main {
 
         try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(IN_ZIP)));
              ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(OUT_ZIP)))) {
-            ZipTransformer zipTransformer = new ZipTransformer();
+            ZipTransformer zipTransformer = new ZipTransformer(zis, out);
 
-            zipTransformer.copyZip(zis, out);
-
-            zipTransformer.writeEmailFile(out);
-            zipTransformer.writePhoneFile(out);
+            zipTransformer.copyZipAndFilterPhonesEmails();
         }
 
         finish = System.currentTimeMillis();
