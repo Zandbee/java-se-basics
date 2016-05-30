@@ -3,7 +3,7 @@ import java.util.Set;
 
 public class Utils {
 
-    public static final String UTF_8 = "UTF-8";
+    private static final String UTF_8 = "UTF-8";
 
     public static byte[] toBytes(Set<String> strs) {
         StringBuilder sb = new StringBuilder();

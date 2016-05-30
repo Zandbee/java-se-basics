@@ -10,6 +10,7 @@ public class Main {
     public static void main(String args[]) throws Exception{
         double start, finish;
 
+        System.out.println("Copying...");
         start = System.currentTimeMillis();
 
         try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(IN_ZIP)));

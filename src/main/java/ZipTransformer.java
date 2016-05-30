@@ -91,7 +91,7 @@ public class ZipTransformer {
             out.write(Utils.toBytes(emailString));
 
             if (allLines.add(emailString)) {
-                System.out.println(emailString);
+                //System.out.println(emailString);
                 addUniqueEmails(emailString);
             }
         } else {
@@ -195,7 +195,7 @@ public class ZipTransformer {
         return name.endsWith(".gz");
     }
 
-    private static final class PhoneFormatResult {
+    private class PhoneFormatResult {
         private String phone;
         private String kusochekEmail;
 
