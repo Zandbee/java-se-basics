@@ -25,9 +25,10 @@ public class ZipTransformer {
     private ZipInputStream in;
     private ZipOutputStream out;
 
-    public ZipTransformer(ZipInputStream zipInputStream, ZipOutputStream outputStream) {
-        in = zipInputStream;
-        out = outputStream;
+    public ZipTransformer(ZipInputStream in, ZipOutputStream out) {
+        super();
+        this.in = in;
+        this.out = out;
     }
 
     public void copyZipAndFilterPhonesEmails() throws IOException {
@@ -104,7 +105,6 @@ public class ZipTransformer {
             out.write(Utils.toBytes(emailString));
 
             if (allLines.add(emailString)) {
-                //System.out.println(emailString);
                 addUniqueEmails(emailString);
             }
         } else {
