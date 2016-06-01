@@ -1,11 +1,10 @@
 import java.io.*;
-import java.util.logging.Logger;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-public class Main {
+import static java.lang.System.*;
 
-    private static final Logger logger = Logger.getLogger(Main.class.getName());
+public class Main {
 
     private static final String IN_ZIP = "inputs.zip";
     private static final String OUT_ZIP = "inputsv2.zip";
@@ -17,13 +16,13 @@ public class Main {
 
         setZipFiles(args);
 
-        logger.info("Copying...");
+        out.println("Copying...");
         start = System.currentTimeMillis();
 
         transformZip();
 
         finish = System.currentTimeMillis();
-        logger.info("TOTAL TIME: " + (finish - start) / 1000);
+        out.println("TOTAL TIME: " + (finish - start) / 1000);
     }
 
     private static void transformZip() throws IOException {
@@ -33,7 +32,7 @@ public class Main {
 
             zipTransformer.copyZipAndFilterPhonesEmails();
         } catch (FileNotFoundException ex) {
-            logger.severe("Invalid input zip name - no such file.");
+            err.println("Invalid input zip name - no such file.");
         }
     }
 
@@ -56,7 +55,7 @@ public class Main {
                 break;
         }
 
-        logger.info("Input file: " + inZip);
-        logger.info("Output file: " + outZip);
+        out.println("Input file: " + inZip);
+        out.println("Output file: " + outZip);
     }
 }

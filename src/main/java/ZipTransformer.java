@@ -187,7 +187,7 @@ public class ZipTransformer {
 
     private void writePhoneFile() throws IOException {
         out.putNextEntry(new ZipEntry(PHONES_ZIP));
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, UTF_8));
         for (String phoneLine : allPhones){
             bw.write(phoneLine);
             bw.newLine();
@@ -197,7 +197,7 @@ public class ZipTransformer {
 
     private void writeEmailFile() throws IOException {
         out.putNextEntry(new ZipEntry(EMAILS_ZIP));
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out, UTF_8));
         for (String emailLine : allEmails) {
             bw.write(emailLine);
             bw.newLine();
