@@ -26,7 +26,6 @@ public class ZipTransformer {
     private ZipOutputStream out;
 
     public ZipTransformer(ZipInputStream in, ZipOutputStream out) {
-        super();
         this.in = in;
         this.out = out;
     }
