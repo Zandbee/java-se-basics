@@ -1,38 +1,41 @@
 import java.io.*;
+import java.util.Date;
+import java.util.logging.Logger;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import static java.lang.System.*;
-
 public class Main {
+
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     private static final String IN_ZIP = "inputs.zip";
     private static final String OUT_ZIP = "inputsv2.zip";
 
     private static String inZip, outZip;
 
-    public static void main(String args[]) throws Exception{
-        double start, finish;
-
+    public static void main(String args[]) {
         setZipFiles(args);
 
-        out.println("Copying...");
-        start = System.currentTimeMillis();
+        logger.info("Started copying at " + new Date());
+        double start = System.currentTimeMillis();
 
         transformZip();
 
-        finish = System.currentTimeMillis();
-        out.println("TOTAL TIME: " + (finish - start) / 1000);
+        logger.info("Finished copying at " + new Date());
+        double finish = System.currentTimeMillis();
+        logger.info("TOTAL TIME: " + ((finish - start) / 1000) + " seconds");
     }
 
-    private static void transformZip() throws IOException {
+    private static void transformZip() {
         try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(inZip)));
              ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outZip)))) {
             ZipTransformer zipTransformer = new ZipTransformer(zis, out);
 
             zipTransformer.copyZipAndFilterPhonesEmails();
         } catch (FileNotFoundException ex) {
-            err.println("Invalid input zip name - no such file.");
+            logger.severe("Invalid input zip name. No such file: " + inZip);
+        } catch (IOException ex) {
+            logger.severe("Error processing files: " + ex.getMessage());
         }
     }
 
@@ -42,8 +45,8 @@ public class Main {
         argsLength = args.length;
         switch (argsLength) {
             case 1:
-                inZip = IN_ZIP;
-                outZip = args[0];
+                inZip = args[0];
+                outZip = OUT_ZIP;
                 break;
             case 2:
                 inZip = args[0];
@@ -55,7 +58,7 @@ public class Main {
                 break;
         }
 
-        out.println("Input file: " + inZip);
-        out.println("Output file: " + outZip);
+        logger.info("Input file: " + inZip);
+        logger.info("Output file: " + outZip);
     }
 }
