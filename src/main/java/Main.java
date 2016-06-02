@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.Date;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -33,9 +34,9 @@ public class Main {
 
             zipTransformer.copyZipAndFilterPhonesEmails();
         } catch (FileNotFoundException ex) {
-            logger.severe("Invalid input zip name. No such file: " + inZip);
+            logger.log(Level.SEVERE, "Invalid input zip name. No such file: " + inZip, ex);
         } catch (IOException ex) {
-            logger.severe("Error processing files: " + ex.getMessage());
+            logger.log(Level.SEVERE, "Error processing files: " + ex.getMessage(), ex);
         }
     }
 
